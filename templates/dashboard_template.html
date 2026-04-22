@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTS Oslo - Pakkesammenligning</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @font-face { font-family: 'FINN Type'; src: url('Documents/FINN_Style_Guide/fonts/FINNType-Regular.otf') format('opentype'); font-weight: 400; }
+  @font-face { font-family: 'FINN Type'; src: url('Documents/FINN_Style_Guide/fonts/FINNType-Medium.otf') format('opentype'); font-weight: 500; }
+  @font-face { font-family: 'FINN Type'; src: url('Documents/FINN_Style_Guide/fonts/FINNType-Bold.otf') format('opentype'); font-weight: 700; }
+  @font-face { font-family: 'FINN Type'; src: url('Documents/FINN_Style_Guide/fonts/FINNType-Black.otf') format('opentype'); font-weight: 900; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'FINN Type', 'Inter', Arial, system-ui, sans-serif;
+    background: #f6f6f6;
+    color: #474445;
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .finn-logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
+  h1 { font-size: 24px; font-weight: 700; color: #474445; }
+  .subtitle { font-size: 14px; color: #767677; margin-top: 2px; }
+
+  .filters { margin-top: 20px; margin-bottom: 4px; }
+  .filter-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .filter-label { font-size: 12px; font-weight: 700; color: #767677; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; min-width: 85px; }
+  .filter-btn {
+    padding: 8px 16px; border-radius: 100px; border: 2px solid #e8e8e8; background: white;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: #474445; cursor: pointer; transition: all 0.15s ease;
+  }
+  .filter-btn:hover { border-color: #06BEFB; color: #0063FB; }
+  .filter-btn.active { background: #0063FB; border-color: #0063FB; color: white; }
+
+  .filter-select {
+    padding: 8px 32px 8px 14px; border-radius: 100px; border: 2px solid #e8e8e8; background: white;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: #474445; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23474445' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    transition: all 0.15s ease; min-width: 220px;
+  }
+  .filter-select:hover { border-color: #06BEFB; }
+  .filter-select:focus { border-color: #0063FB; outline: none; box-shadow: 0 0 0 3px rgba(0,99,251,0.15); }
+
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #767677; margin-bottom: 12px; margin-top: 32px; }
+
+  .hero-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 8px; }
+  .hero-card {
+    background: white; border-radius: 16px; padding: 24px 20px; border: 1px solid #e8e8e8;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #0063FB, #06BEFB); }
+  .hero-metric { font-size: 12px; font-weight: 700; color: #767677; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .hero-pct { font-size: 44px; font-weight: 900; color: #0063FB; line-height: 1; margin-bottom: 8px; }
+  .hero-abs { font-size: 18px; font-weight: 700; color: #474445; margin-bottom: 4px; }
+  .hero-detail { font-size: 12px; color: #767677; }
+
+  .bar-section { background: white; border-radius: 16px; padding: 28px 32px; border: 1px solid #e8e8e8; margin-bottom: 8px; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 16px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-label { width: 180px; font-size: 13px; font-weight: 700; color: #474445; flex-shrink: 0; }
+  .bar-label-sub { font-size: 11px; font-weight: 400; color: #767677; }
+  .bar-track { flex: 1; height: 32px; background: #f0f0f0; border-radius: 6px; overflow: hidden; }
+  .bar-fill-delta {
+    height: 32px; border-radius: 6px; background: linear-gradient(90deg, #0063FB, #06BEFB);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; min-width: 40px; transition: width 0.6s ease;
+  }
+  .bar-delta { width: 70px; text-align: right; font-size: 15px; font-weight: 900; color: #28CD94; flex-shrink: 0; padding-left: 12px; }
+  .bar-delta.negative { color: #FF5844; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .chart-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e8e8e8; }
+  .chart-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: #474445; }
+  .chart-subtitle { font-size: 12px; color: #767677; margin-bottom: 16px; }
+  .chart-container { position: relative; height: 240px; }
+
+  .legend-row { display: flex; gap: 24px; justify-content: center; margin-bottom: 0; margin-top: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .legend-dot.stor { background: #0063FB; }
+  .legend-dot.medium { background: #06BEFB; }
+
+  .footer { text-align: center; font-size: 11px; color: #767677; margin-top: 24px; }
+  .charts-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .sample-warning { text-align: center; font-size: 12px; color: #FF5844; font-weight: 600; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="finn-logo-wrap"><img src="Finn.no-logo.svg.png" alt="FINN" height="40"></div>
+  <div>
+    <h1>BTS Oslo &mdash; Stor vs Medium pakke</h1>
+    <div class="subtitle">Marginaleffekt av Stor pakke &middot; Totalt f&oslash;rste 8 dager etter publisering &middot; Siste 12 mnd &middot; Snitt per annonse</div>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="filter-bar" id="filterType">
+    <span class="filter-label">Boligtype:</span>
+    <button class="filter-btn active" data-val="ALL">Alle</button>
+    <button class="filter-btn" data-val="FLAT">Leilighet</button>
+    <button class="filter-btn" data-val="DETACHED">Enebolig</button>
+    <button class="filter-btn" data-val="TERRACED">Rekkehus</button>
+    <button class="filter-btn" data-val="SEMIDETACHED">Tomannsbolig</button>
+  </div>
+  <div class="filter-bar" id="filterBydel">
+    <span class="filter-label">Byomr&aring;de:</span>
+    <select class="filter-select" id="byomradeSelect">
+      <option value="ALL">Alle byomr&aring;der</option>
+{{BYOMRADE_OPTIONS}}
+    </select>
+  </div>
+</div>
+
+<div class="legend-row">
+  <div class="legend-item"><div class="legend-dot stor"></div> Stor pakke <span id="legendStor"></span></div>
+  <div class="legend-item"><div class="legend-dot medium"></div> Medium pakke <span id="legendMedium"></span></div>
+</div>
+<div class="sample-warning" id="sampleWarning" style="display:none"></div>
+
+<div class="section-label">Hva du f&aring;r ekstra med Stor pakke &mdash; totalt f&oslash;rste 8 dager</div>
+<div class="hero-grid" id="heroGrid"></div>
+
+<div class="section-label">Marginaleffekt &mdash; ekstra engagement per annonse vs Medium</div>
+<div class="bar-section" id="barSection"></div>
+
+<div class="section-label">Kumulativ utvikling &mdash; gapet vokser dag for dag</div>
+<div class="charts-grid">
+  <div class="chart-card"><div class="chart-title">Annonsevisninger</div><div class="chart-subtitle">Kumulativt snitt visninger per annonse</div><div class="chart-container"><canvas id="chartViews"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">Lagret som favoritt</div><div class="chart-subtitle">Kumulativt snitt favoritter per annonse</div><div class="chart-container"><canvas id="chartFavorites"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">Visningsp&aring;melding</div><div class="chart-subtitle">Kumulativt snitt p&aring;meldinger per annonse</div><div class="chart-container"><canvas id="chartViewing"></canvas></div></div>
+  <div class="chart-card"><div class="chart-title">Last ned salgsoppgave</div><div class="chart-subtitle">Kumulativt snitt nedlastinger per annonse</div><div class="chart-container"><canvas id="chartProspect"></canvas></div></div>
+</div>
+<div class="charts-grid-3">
+  <div class="chart-card"><div class="chart-title">Meldinger sendt</div><div class="chart-subtitle">Kumulativt snitt meldinger per annonse</div><div class="chart-container"><canvas id="chartMessages"></canvas></div></div>
+</div>
+
+<div class="footer">Kilde: Snowflake NMP_BI_PROD &middot; Bolig til salgs, Oslo, FINN &middot; Siste 12 m&aring;neder &middot; Alle plattformer (Web + iOS + Android)</div>
+
+<script>
+const FONT = "'FINN Type', 'Inter', Arial, sans-serif";
+const labels = ['Dag 1','Dag 2','Dag 3','Dag 4','Dag 5','Dag 6','Dag 7','Dag 8'];
+const STOR_COLOR = '#0063FB';
+const MEDIUM_COLOR = '#06BEFB';
+
+const D = {{DATA_JSON}};
+
+function cumulate(arr) {
+  const r = []; let s = 0;
+  for (const v of arr) { s += v; r.push(Math.round(s * 100) / 100); }
+  return r;
+}
+
+const metrics = [
+  { key: 'views', label: 'Annonsevisninger', fmtAbs: v => (v>=0?'+':'') + Math.round(v).toLocaleString('nb-NO'), fmt: v => Math.round(v).toLocaleString('nb-NO'), unit: 'ekstra visninger' },
+  { key: 'favorites', label: 'Favoritter', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra favoritter' },
+  { key: 'viewing', label: 'Visningspåmelding', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra påmeldinger' },
+  { key: 'prospect', label: 'Salgsoppgave', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra nedlastinger' },
+  { key: 'messages', label: 'Meldinger', fmtAbs: v => (v>=0?'+':'') + v.toFixed(2), fmt: v => v.toFixed(2), unit: 'ekstra meldinger' }
+];
+
+let charts = {};
+let curType = 'ALL', curBydel = 'ALL';
+
+function render() {
+  const key = curType + '|' + curBydel;
+  const d = D[key];
+
+  if (!d) {
+    document.getElementById('sampleWarning').style.display = 'block';
+    document.getElementById('sampleWarning').textContent = 'Ingen data for denne kombinasjonen. Velg en annen.';
+    document.getElementById('heroGrid').innerHTML = '';
+    document.getElementById('barSection').innerHTML = '';
+    Object.values(charts).forEach(c => c.destroy());
+    charts = {};
+    return;
+  }
+
+  const warn = document.getElementById('sampleWarning');
+  if (Math.min(d.nStor, d.nMedium) < 50) {
+    warn.style.display = 'block';
+    warn.textContent = 'Obs: Lavt utvalg (Stor n=' + d.nStor + ', Medium n=' + d.nMedium + '). Tallene kan v\u00e6re ustabile.';
+  } else {
+    warn.style.display = 'none';
+  }
+
+  document.getElementById('legendStor').textContent = '(n=' + d.nStor.toLocaleString('nb-NO') + ')';
+  document.getElementById('legendMedium').textContent = '(n=' + d.nMedium.toLocaleString('nb-NO') + ')';
+
+  const cum = {
+    stor: Object.fromEntries(Object.entries(d.stor).map(([k,v]) => [k, cumulate(v)])),
+    medium: Object.fromEntries(Object.entries(d.medium).map(([k,v]) => [k, cumulate(v)]))
+  };
+
+  const heroGrid = document.getElementById('heroGrid');
+  heroGrid.innerHTML = '';
+  metrics.forEach(m => {
+    const s = cum.stor[m.key][7], med = cum.medium[m.key][7];
+    const delta = s - med, pct = med !== 0 ? Math.round((s / med - 1) * 100) : 0;
+    const card = document.createElement('div');
+    card.className = 'hero-card';
+    card.innerHTML = '<div class="hero-metric">' + m.label + '</div><div class="hero-pct">' + (pct >= 0 ? '+' : '') + pct + '%</div><div class="hero-abs">' + m.fmtAbs(delta) + '</div><div class="hero-detail">' + m.unit + '</div>';
+    heroGrid.appendChild(card);
+  });
+
+  const barSection = document.getElementById('barSection');
+  barSection.innerHTML = '';
+  const maxD = Math.max(...metrics.map(m => { const med = cum.medium[m.key][7]; return med !== 0 ? Math.abs(cum.stor[m.key][7] / med - 1) : 0; }));
+  metrics.forEach(m => {
+    const s = cum.stor[m.key][7], med = cum.medium[m.key][7];
+    const delta = s - med, pct = med !== 0 ? Math.round((s / med - 1) * 100) : 0;
+    const ratio = med !== 0 ? Math.abs(s / med - 1) : 0;
+    const bw = maxD > 0 ? Math.max((ratio / maxD) * 100, 8) : 50;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<div class="bar-label">' + m.label + '<br><span class="bar-label-sub">' + m.fmt(med) + ' \u2192 ' + m.fmt(s) + '</span></div><div class="bar-track"><div class="bar-fill-delta" style="width:' + bw.toFixed(1) + '%">' + m.fmtAbs(delta) + '</div></div><div class="bar-delta ' + (pct<0?'negative':'') + '">' + (pct>=0?'+':'') + pct + '%</div>';
+    barSection.appendChild(row);
+  });
+
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+  [['chartViews','views'],['chartFavorites','favorites'],['chartViewing','viewing'],['chartProspect','prospect'],['chartMessages','messages']].forEach(([id,key]) => {
+    charts[id] = makeGapChart(id, cum.stor[key], cum.medium[key]);
+  });
+}
+
+function makeGapChart(canvasId, storData, medData) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const gapPlugin = {
+    id: 'gf_' + canvasId,
+    beforeDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const s = chart.getDatasetMeta(0), m = chart.getDatasetMeta(1);
+      if (!s.data.length || !m.data.length) return;
+      ctx.save(); ctx.beginPath();
+      s.data.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+      for (let i=m.data.length-1;i>=0;i--) ctx.lineTo(m.data[i].x,m.data[i].y);
+      ctx.closePath(); ctx.fillStyle='rgba(0,99,251,0.08)'; ctx.fill(); ctx.restore();
+    }
+  };
+  return new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Stor', data:storData, borderColor:STOR_COLOR, borderWidth:3, pointRadius:4, pointHoverRadius:6, pointBackgroundColor:STOR_COLOR, fill:false, tension:0.3 },
+      { label:'Medium', data:medData, borderColor:MEDIUM_COLOR, borderWidth:3, pointRadius:4, pointHoverRadius:6, pointBackgroundColor:MEDIUM_COLOR, fill:false, tension:0.3 }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ intersect:false, mode:'index' },
+      plugins:{ legend:{display:false}, tooltip:{
+        backgroundColor:'#1b1b1f', titleColor:'#fff', bodyColor:'#fff', cornerRadius:8, padding:12, bodyFont:{family:FONT},
+        callbacks:{ afterBody:function(items){ if(items.length<2)return''; const d=items[0].parsed.y-items[1].parsed.y; const p=items[1].parsed.y!==0?((items[0].parsed.y/items[1].parsed.y-1)*100).toFixed(0):'0'; return '\nMerverdi Stor: +'+p+'% (+'+d.toFixed(1)+')'; }}
+      }},
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:FONT,size:11},color:'#767677'} },
+        y:{ grid:{color:'#f0f0f0'}, ticks:{font:{family:FONT,size:11},color:'#767677'}, beginAtZero:true }
+      }
+    },
+    plugins:[gapPlugin]
+  });
+}
+
+document.getElementById('filterType').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('#filterType .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  curType = btn.dataset.val;
+  render();
+});
+
+document.getElementById('byomradeSelect').addEventListener('change', e => {
+  curBydel = e.target.value;
+  render();
+});
+
+render();
+</script>
+
+</body>
+</html>
