@@ -159,6 +159,8 @@ def build_price_index(price_data, exclude_blink=False):
             "sum_price_adj": float(r["AVG_PRICE_ADJ_PCT"]) * n,
             "sum_fornying": float(r["AVG_FORNYING"]) * n,
             "sum_superfornying": float(r["AVG_SUPERFORNYING"]) * n,
+            "ads_with_fornying": int(r["ADS_WITH_FORNYING"]),
+            "ads_with_superfornying": int(r["ADS_WITH_SUPERFORNYING"]),
             "sold_over": int(r["SOLD_OVER"]),
             "sold_at": int(r["SOLD_AT"]),
             "sold_under": int(r["SOLD_UNDER"]),
@@ -168,7 +170,7 @@ def build_price_index(price_data, exclude_blink=False):
             e["n"] += n
             for k in ["sum_price_diff", "sum_days", "sum_price_adj", "sum_fornying", "sum_superfornying"]:
                 e[k] += entry[k]
-            for k in ["sold_over", "sold_at", "sold_under"]:
+            for k in ["ads_with_fornying", "ads_with_superfornying", "sold_over", "sold_at", "sold_under"]:
                 e[k] += entry[k]
         else:
             raw[key] = entry
@@ -181,6 +183,7 @@ def aggregate_price(raw, filters_byo, filters_type):
         total_n = 0
         sums = {"sum_price_diff": 0, "sum_days": 0, "sum_price_adj": 0,
                 "sum_fornying": 0, "sum_superfornying": 0,
+                "ads_with_fornying": 0, "ads_with_superfornying": 0,
                 "sold_over": 0, "sold_at": 0, "sold_under": 0}
         for byo in filters_byo:
             for typ in filters_type:
@@ -198,6 +201,8 @@ def aggregate_price(raw, filters_byo, filters_type):
                 "avgPriceAdjPct": round(sums["sum_price_adj"] / total_n, 2),
                 "avgFornying": round(sums["sum_fornying"] / total_n, 2),
                 "avgSuperfornying": round(sums["sum_superfornying"] / total_n, 2),
+                "pctFornying": round(sums["ads_with_fornying"] * 100 / total_n, 1),
+                "pctSuperfornying": round(sums["ads_with_superfornying"] * 100 / total_n, 1),
                 "pctOver": round(sums["sold_over"] * 100 / total_n, 1),
                 "pctAt": round(sums["sold_at"] * 100 / total_n, 1),
                 "pctUnder": round(sums["sold_under"] * 100 / total_n, 1),

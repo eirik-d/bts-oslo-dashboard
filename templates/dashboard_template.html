@@ -429,8 +429,8 @@ function renderPrice() {
       makeRow('Solgt over prisantydning', s.pctOver, m.pctOver, v => v.toFixed(1) + '%', false) +
       makeRow('Solgt på prisantydning', s.pctAt, m.pctAt, v => v.toFixed(1) + '%', false) +
       makeRow('Solgt under prisantydning', s.pctUnder, m.pctUnder, v => v.toFixed(1) + '%', true) +
-      makeRow('Snitt fornyinger', s.avgFornying, m.avgFornying, v => v.toFixed(2), false) +
-      makeRow('Snitt superfornyinger', s.avgSuperfornying, m.avgSuperfornying, v => v.toFixed(2), false) +
+      makeRow('Kjøpt fornying', s.pctFornying, m.pctFornying, v => v.toFixed(1) + '%', false) +
+      makeRow('Kjøpt superfornying', s.pctSuperfornying, m.pctSuperfornying, v => v.toFixed(1) + '%', false) +
       '</tbody></table>';
   } else {
     priceTableEl.innerHTML = '';
