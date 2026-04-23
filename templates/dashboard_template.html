@@ -395,7 +395,7 @@ function renderPrice() {
   const cards = [
     { label: 'Prisoppnåelse (snitt)', storVal: s ? s.avgPriceDiffPct : null, medVal: m ? m.avgPriceDiffPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', unit: 'over prisantydning' },
     { label: 'Dager til salg (snitt)', storVal: s ? s.avgDaysToSale : null, medVal: m ? m.avgDaysToSale : null, fmt: v => v.toFixed(1), unit: 'dager', invert: true },
-    { label: 'Prisendringer (snitt)', storVal: s ? s.avgPriceChanges : null, medVal: m ? m.avgPriceChanges : null, fmt: v => v.toFixed(2), unit: 'endringer før salg', invert: true },
+    { label: 'Prisjustering (snitt)', storVal: s ? s.avgPriceAdjPct : null, medVal: m ? m.avgPriceAdjPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', unit: 'endring i prisantydning', invert: true },
   ];
 
   cards.forEach(c => {
@@ -424,9 +424,7 @@ function renderPrice() {
       '</tr></thead><tbody>' +
       makeRow('Prisoppnåelse (snitt)', s.avgPriceDiffPct, m.avgPriceDiffPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', false) +
       makeRow('Dager til salg', s.avgDaysToSale, m.avgDaysToSale, v => v.toFixed(1) + ' dager', true) +
-      makeRow('Prisendringer', s.avgPriceChanges, m.avgPriceChanges, v => v.toFixed(2), true) +
-      makeRow('Snitt prisantydning', s.avgAskingPrice, m.avgAskingPrice, fmtKr, false) +
-      makeRow('Snitt solgtpris', s.avgSalesPrice, m.avgSalesPrice, fmtKr, false) +
+      makeRow('Prisjustering', s.avgPriceAdjPct, m.avgPriceAdjPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', true) +
       makeRow('Solgt over prisantydning', s.pctOver, m.pctOver, v => v.toFixed(1) + '%', false) +
       makeRow('Solgt på prisantydning', s.pctAt, m.pctAt, v => v.toFixed(1) + '%', false) +
       makeRow('Solgt under prisantydning', s.pctUnder, m.pctUnder, v => v.toFixed(1) + '%', true) +
