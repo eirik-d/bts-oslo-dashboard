@@ -157,6 +157,8 @@ def build_price_index(price_data, exclude_blink=False):
             "sum_price_diff": float(r["AVG_PRICE_DIFF_PCT"]) * n,
             "sum_days": float(r["AVG_DAYS_TO_SALE"]) * n,
             "sum_price_adj": float(r["AVG_PRICE_ADJ_PCT"]) * n,
+            "sum_fornying": float(r["AVG_FORNYING"]) * n,
+            "sum_superfornying": float(r["AVG_SUPERFORNYING"]) * n,
             "sold_over": int(r["SOLD_OVER"]),
             "sold_at": int(r["SOLD_AT"]),
             "sold_under": int(r["SOLD_UNDER"]),
@@ -164,7 +166,7 @@ def build_price_index(price_data, exclude_blink=False):
         if key in raw:
             e = raw[key]
             e["n"] += n
-            for k in ["sum_price_diff", "sum_days", "sum_price_adj"]:
+            for k in ["sum_price_diff", "sum_days", "sum_price_adj", "sum_fornying", "sum_superfornying"]:
                 e[k] += entry[k]
             for k in ["sold_over", "sold_at", "sold_under"]:
                 e[k] += entry[k]
@@ -178,6 +180,7 @@ def aggregate_price(raw, filters_byo, filters_type):
     for pakke in ["Stor", "Medium"]:
         total_n = 0
         sums = {"sum_price_diff": 0, "sum_days": 0, "sum_price_adj": 0,
+                "sum_fornying": 0, "sum_superfornying": 0,
                 "sold_over": 0, "sold_at": 0, "sold_under": 0}
         for byo in filters_byo:
             for typ in filters_type:
@@ -193,6 +196,8 @@ def aggregate_price(raw, filters_byo, filters_type):
                 "avgPriceDiffPct": round(sums["sum_price_diff"] / total_n, 2),
                 "avgDaysToSale": round(sums["sum_days"] / total_n, 1),
                 "avgPriceAdjPct": round(sums["sum_price_adj"] / total_n, 2),
+                "avgFornying": round(sums["sum_fornying"] / total_n, 2),
+                "avgSuperfornying": round(sums["sum_superfornying"] / total_n, 2),
                 "pctOver": round(sums["sold_over"] * 100 / total_n, 1),
                 "pctAt": round(sums["sold_at"] * 100 / total_n, 1),
                 "pctUnder": round(sums["sold_under"] * 100 / total_n, 1),
