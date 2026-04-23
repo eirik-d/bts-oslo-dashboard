@@ -89,6 +89,49 @@
   .footer { text-align: center; font-size: 11px; color: #767677; margin-top: 24px; }
   .charts-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .sample-warning { text-align: center; font-size: 12px; color: #FF5844; font-weight: 600; margin-top: 8px; }
+
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 18px; }
+    .subtitle { font-size: 12px; }
+    .header { gap: 10px; }
+    .finn-logo-wrap img { height: 28px; }
+
+    .filter-bar { gap: 6px; }
+    .filter-label { min-width: auto; width: 100%; margin-bottom: 2px; }
+    .filter-btn { padding: 6px 12px; font-size: 12px; }
+    .filter-select { min-width: 0; width: 100%; }
+
+    .hero-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .hero-pct { font-size: 28px; }
+    .hero-abs { font-size: 14px; }
+    .hero-metric { font-size: 10px; margin-bottom: 8px; }
+    .hero-detail { font-size: 10px; }
+    .hero-card { padding: 16px 12px; }
+
+    .bar-section { padding: 16px; }
+    .bar-row { flex-wrap: wrap; }
+    .bar-label { width: 100%; margin-bottom: 6px; font-size: 12px; }
+    .bar-track { width: 100%; flex: 1; }
+    .bar-delta { width: auto; padding-left: 8px; font-size: 14px; }
+
+    .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+    .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
+    .chart-card { padding: 16px; }
+    .chart-container { height: 200px; }
+    .chart-title { font-size: 14px; }
+
+    .legend-row { gap: 16px; }
+    .legend-item { font-size: 12px; }
+    .section-label { font-size: 10px; margin-top: 24px; }
+  }
+
+  @media (max-width: 400px) {
+    body { padding: 12px; }
+    .hero-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-pct { font-size: 24px; }
+    .filter-btn { padding: 5px 10px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
