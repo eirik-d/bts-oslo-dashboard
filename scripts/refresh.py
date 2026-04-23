@@ -22,7 +22,7 @@ OUTPUT_FILE = Path.home() / "Desktop" / "bts_oslo_dashboard.html"
 
 DISPLAY_BYOMRADER_EXCLUDE = {"Ukjent"}
 UI_TYPES = ["FLAT", "DETACHED", "TERRACED", "SEMIDETACHED"]
-METRICS = ["views", "fav", "viewing", "prospect", "msg"]
+METRICS = ["views", "fav", "viewing", "prospect"]
 DAYS = list(range(8))
 
 
@@ -40,11 +40,20 @@ def run_snowflake_query(sql_file, label="engagement"):
     return data
 
 
-def build_raw_index(data, exclude_blink=False):
+def is_recent(r):
+    return r["IS_RECENT"] in (True, "true", "True", 1, "1")
+
+
+def has_blink(r):
+    return r["HAS_BLINK"] in (True, "true", "True", 1, "1")
+
+
+def build_raw_index(data, exclude_blink=False, recent_only=False):
     raw = {}
     for r in data:
-        has_blink = r["HAS_BLINK"] in (True, "true", "True", 1, "1")
-        if exclude_blink and has_blink:
+        if exclude_blink and has_blink(r):
+            continue
+        if recent_only and not is_recent(r):
             continue
         key = (r["BYOMRADE"], r["PROPERTY_TYPE"], r["PAKKE"], r["DAY_NUM"])
         entry = {
@@ -52,7 +61,6 @@ def build_raw_index(data, exclude_blink=False):
             "fav": float(r["AVG_FAV"]),
             "viewing": float(r["AVG_VIEWING"]),
             "prospect": float(r["AVG_PROSPECT"]),
-            "msg": float(r["AVG_MSG"]),
             "n": int(r["N_ADS"]),
         }
         if key in raw:
@@ -104,7 +112,6 @@ def make_entry(raw, filters_byo, filters_type, all_types):
     m = {m: arr("Medium", m) for m in METRICS}
     for d in [s, m]:
         d["favorites"] = d.pop("fav")
-        d["messages"] = d.pop("msg")
     return {"nStor": nS, "nMedium": nM, "stor": s, "medium": m}
 
 
@@ -139,39 +146,41 @@ def build_dashboard_data(raw, data):
     return D, display_byomrader
 
 
-PRICE_METRICS = ["avg_price_diff_pct", "median_price_diff_pct", "avg_days_to_sale",
-                  "median_days_to_sale", "avg_price_changes", "pct_over", "pct_at", "pct_under",
-                  "avg_asking_price", "avg_sales_price"]
-
-
-def build_price_index(price_data, exclude_blink=False):
+def build_price_index(price_data, exclude_blink=False, recent_only=False):
     raw = {}
     for r in price_data:
-        has_blink = r["HAS_BLINK"] in (True, "true", "True", 1, "1")
-        if exclude_blink and has_blink:
+        if exclude_blink and has_blink(r):
+            continue
+        if recent_only and not is_recent(r):
             continue
         key = (r["BYOMRADE"], r["PROPERTY_TYPE"], r["PAKKE"])
         n = int(r["N_ADS"])
+        avg_price_adj = r["AVG_PRICE_ADJ_PCT"]
+        n_with_adj = int(r["N_WITH_PRICE_ADJ"])
         entry = {
             "n": n,
             "sum_price_diff": float(r["AVG_PRICE_DIFF_PCT"]) * n,
             "sum_days": float(r["AVG_DAYS_TO_SALE"]) * n,
-            "sum_price_adj": float(r["AVG_PRICE_ADJ_PCT"]) * n,
-            "sum_fornying": float(r["AVG_FORNYING"]) * n,
-            "sum_superfornying": float(r["AVG_SUPERFORNYING"]) * n,
+            "sum_price_adj": float(avg_price_adj) * n_with_adj if avg_price_adj is not None else 0,
+            "n_with_adj": n_with_adj,
+            "median_price_diff": float(r["MEDIAN_PRICE_DIFF_PCT"]),
+            "median_days": float(r["MEDIAN_DAYS_TO_SALE"]),
             "ads_with_fornying": int(r["ADS_WITH_FORNYING"]),
-            "ads_with_superfornying": int(r["ADS_WITH_SUPERFORNYING"]),
             "sold_over": int(r["SOLD_OVER"]),
             "sold_at": int(r["SOLD_AT"]),
             "sold_under": int(r["SOLD_UNDER"]),
         }
         if key in raw:
             e = raw[key]
+            old_n = e["n"]
             e["n"] += n
-            for k in ["sum_price_diff", "sum_days", "sum_price_adj", "sum_fornying", "sum_superfornying"]:
+            for k in ["sum_price_diff", "sum_days", "sum_price_adj"]:
                 e[k] += entry[k]
-            for k in ["ads_with_fornying", "ads_with_superfornying", "sold_over", "sold_at", "sold_under"]:
+            e["n_with_adj"] += n_with_adj
+            for k in ["ads_with_fornying", "sold_over", "sold_at", "sold_under"]:
                 e[k] += entry[k]
+            e["median_price_diff"] = (e["median_price_diff"] * old_n + entry["median_price_diff"] * n) / e["n"]
+            e["median_days"] = (e["median_days"] * old_n + entry["median_days"] * n) / e["n"]
         else:
             raw[key] = entry
     return raw
@@ -182,9 +191,10 @@ def aggregate_price(raw, filters_byo, filters_type):
     for pakke in ["Stor", "Medium"]:
         total_n = 0
         sums = {"sum_price_diff": 0, "sum_days": 0, "sum_price_adj": 0,
-                "sum_fornying": 0, "sum_superfornying": 0,
-                "ads_with_fornying": 0, "ads_with_superfornying": 0,
+                "n_with_adj": 0, "ads_with_fornying": 0,
                 "sold_over": 0, "sold_at": 0, "sold_under": 0}
+        median_price_diff_sum = 0
+        median_days_sum = 0
         for byo in filters_byo:
             for typ in filters_type:
                 key = (byo, typ, pakke)
@@ -193,16 +203,18 @@ def aggregate_price(raw, filters_byo, filters_type):
                     total_n += r["n"]
                     for k in sums:
                         sums[k] += r[k]
+                    median_price_diff_sum += r["median_price_diff"] * r["n"]
+                    median_days_sum += r["median_days"] * r["n"]
         if total_n > 0:
             result[pakke] = {
                 "n": total_n,
                 "avgPriceDiffPct": round(sums["sum_price_diff"] / total_n, 2),
+                "medianPriceDiffPct": round(median_price_diff_sum / total_n, 2),
                 "avgDaysToSale": round(sums["sum_days"] / total_n, 1),
-                "avgPriceAdjPct": round(sums["sum_price_adj"] / total_n, 2),
-                "avgFornying": round(sums["sum_fornying"] / total_n, 2),
-                "avgSuperfornying": round(sums["sum_superfornying"] / total_n, 2),
+                "medianDaysToSale": round(median_days_sum / total_n, 0),
+                "avgPriceAdjPct": round(sums["sum_price_adj"] / sums["n_with_adj"], 2) if sums["n_with_adj"] > 0 else None,
+                "nWithAdj": sums["n_with_adj"],
                 "pctFornying": round(sums["ads_with_fornying"] * 100 / total_n, 1),
-                "pctSuperfornying": round(sums["ads_with_superfornying"] * 100 / total_n, 1),
                 "pctOver": round(sums["sold_over"] * 100 / total_n, 1),
                 "pctAt": round(sums["sold_at"] * 100 / total_n, 1),
                 "pctUnder": round(sums["sold_under"] * 100 / total_n, 1),
@@ -261,15 +273,31 @@ def main():
     raw_no_blink = build_raw_index(data, exclude_blink=True)
     D_no_blink, _ = build_dashboard_data(raw_no_blink, data)
 
+    raw_recent = build_raw_index(data, exclude_blink=False, recent_only=True)
+    D_recent, _ = build_dashboard_data(raw_recent, data)
+
+    raw_recent_no_blink = build_raw_index(data, exclude_blink=True, recent_only=True)
+    D_recent_no_blink, _ = build_dashboard_data(raw_recent_no_blink, data)
+
     price_raw_all = build_price_index(price_data, exclude_blink=False)
     P_all = build_price_dashboard_data(price_raw_all, price_data)
 
     price_raw_no_blink = build_price_index(price_data, exclude_blink=True)
     P_no_blink = build_price_dashboard_data(price_raw_no_blink, price_data)
 
+    price_raw_recent = build_price_index(price_data, exclude_blink=False, recent_only=True)
+    P_recent = build_price_dashboard_data(price_raw_recent, price_data)
+
+    price_raw_recent_no_blink = build_price_index(price_data, exclude_blink=True, recent_only=True)
+    P_recent_no_blink = build_price_dashboard_data(price_raw_recent_no_blink, price_data)
+
     combined = {
         "all": D_all, "noBlink": D_no_blink,
-        "price": {"all": P_all, "noBlink": P_no_blink},
+        "recent": D_recent, "recentNoBlink": D_recent_no_blink,
+        "price": {
+            "all": P_all, "noBlink": P_no_blink,
+            "recent": P_recent, "recentNoBlink": P_recent_no_blink,
+        },
     }
     data_json = json.dumps(combined, separators=(",", ":"))
 

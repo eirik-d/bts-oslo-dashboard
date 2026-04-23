@@ -119,14 +119,15 @@
   .price-table .pkg-medium { color: #06BEFB; }
   .price-table .val-positive { color: #28CD94; font-weight: 700; }
   .price-table .val-negative { color: #474445; font-weight: 700; }
+  .price-table .sub-val { font-size: 11px; color: #767677; font-weight: 400; }
 
-  .donut-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 8px; }
-  .donut-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e8e8e8; text-align: center; }
-  .donut-container { position: relative; height: 200px; margin: 0 auto; max-width: 200px; }
+  .dist-chart-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 8px; }
+  .dist-chart-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e8e8e8; }
+  .dist-chart-container { position: relative; height: 180px; }
 
   .footer { text-align: center; font-size: 11px; color: #767677; margin-top: 24px; }
-  .charts-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .sample-warning { text-align: center; font-size: 12px; color: #767677; font-weight: 600; margin-top: 8px; }
+  .price-note { font-size: 11px; color: #767677; font-style: italic; margin-top: 4px; }
 
   @media (max-width: 768px) {
     body { padding: 16px; }
@@ -140,7 +141,7 @@
     .filter-btn { padding: 6px 12px; font-size: 12px; }
     .filter-select { min-width: 0; width: 100%; }
 
-    .hero-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .hero-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .hero-pct { font-size: 28px; }
     .hero-abs { font-size: 14px; }
     .hero-metric { font-size: 10px; margin-bottom: 8px; }
@@ -154,21 +155,15 @@
     .bar-delta { width: auto; padding-left: 8px; font-size: 14px; }
 
     .charts-grid { grid-template-columns: 1fr; gap: 12px; }
-    .charts-grid-3 { grid-template-columns: 1fr; gap: 12px; }
     .chart-card { padding: 16px; }
     .chart-container { height: 200px; }
     .chart-title { font-size: 14px; }
 
+    .price-grid { grid-template-columns: 1fr; }
+
     .legend-row { gap: 16px; }
     .legend-item { font-size: 12px; }
     .section-label { font-size: 10px; margin-top: 24px; }
-  }
-
-  @media (max-width: 400px) {
-    body { padding: 12px; }
-    .hero-grid { grid-template-columns: repeat(2, 1fr); }
-    .hero-pct { font-size: 24px; }
-    .filter-btn { padding: 5px 10px; font-size: 11px; }
   }
 </style>
 </head>
@@ -178,7 +173,7 @@
   <div class="finn-logo-wrap"><img src="Finn.no-logo.svg.png" alt="FINN" height="40"></div>
   <div>
     <h1>Pakkesammenligning Oslo</h1>
-    <div class="subtitle">Marginaleffekt av Stor pakke &middot; Totalt f&oslash;rste 8 dager etter publisering &middot; Siste 12 mnd &middot; Snitt per annonse</div>
+    <div class="subtitle">Marginaleffekt av Stor pakke &middot; Engagement og prisoppn&aring;else &middot; Oslo</div>
   </div>
 </div>
 
@@ -197,6 +192,13 @@
       <option value="ALL">Alle byomr&aring;der</option>
 {{BYOMRADE_OPTIONS}}
     </select>
+  </div>
+  <div class="filter-bar">
+    <span class="filter-label">Periode:</span>
+    <div id="filterPeriod">
+      <button class="filter-btn active" data-val="12m">Siste 12 mnd</button>
+      <button class="filter-btn" data-val="3m">Siste 3 mnd</button>
+    </div>
   </div>
   <div class="filter-bar">
     <span class="filter-label">Blink-filter:</span>
@@ -230,18 +232,18 @@
   <div class="chart-card"><div class="chart-title">Last ned salgsoppgave</div><div class="chart-subtitle">Kumulativt snitt nedlastinger per annonse</div><div class="chart-container"><canvas id="chartProspect"></canvas></div></div>
 </div>
 
-<div class="section-label">Prisoppn&aring;else &mdash; solgtpris vs prisantydning (kun solgte boliger)</div>
+<div class="section-label">Prisoppn&aring;else &mdash; solgtpris vs f&oslash;rste prisantydning (kun solgte boliger)</div>
+<div class="sample-warning" id="priceSampleWarning" style="display:none"></div>
 <div class="price-grid" id="priceGrid"></div>
 
 <div class="price-compare" id="priceTable"></div>
 
 <div class="section-label">Fordeling &mdash; over, p&aring; og under prisantydning</div>
-<div class="donut-row">
-  <div class="donut-card"><div class="chart-title">Stor pakke</div><div class="chart-subtitle">Andel solgt over/p&aring;/under prisantydning</div><div class="donut-container"><canvas id="donutStor"></canvas></div></div>
-  <div class="donut-card"><div class="chart-title">Medium pakke</div><div class="chart-subtitle">Andel solgt over/p&aring;/under prisantydning</div><div class="donut-container"><canvas id="donutMedium"></canvas></div></div>
+<div class="dist-chart-row">
+  <div class="dist-chart-card"><div class="chart-subtitle">Andel solgt over / p&aring; / under f&oslash;rste prisantydning</div><div class="dist-chart-container"><canvas id="distChart"></canvas></div></div>
 </div>
 
-<div class="footer">Kilde: Snowflake NMP_BI_PROD &middot; Bolig til salgs, Oslo, FINN &middot; Siste 12 m&aring;neder &middot; Alle plattformer (Web + iOS + Android)</div>
+<div class="footer">Kilde: Snowflake NMP_BI_PROD &middot; Bolig til salgs, Oslo, FINN &middot; Alle plattformer (Web + iOS + Android)</div>
 
 <script>
 const FONT = "'FINN Type', 'Inter', Arial, sans-serif";
@@ -250,8 +252,26 @@ const STOR_COLOR = '#0063FB';
 const MEDIUM_COLOR = '#06BEFB';
 
 const _DATA = {{DATA_JSON}};
-let D = _DATA.all;
-let P = _DATA.price.all;
+let D, P;
+let curType = 'ALL', curBydel = 'ALL', curPeriod = '12m', curBlink = false;
+
+function pickDatasets() {
+  const recent = curPeriod === '3m';
+  if (recent && curBlink) {
+    D = _DATA.recentNoBlink;
+    P = _DATA.price.recentNoBlink;
+  } else if (recent) {
+    D = _DATA.recent;
+    P = _DATA.price.recent;
+  } else if (curBlink) {
+    D = _DATA.noBlink;
+    P = _DATA.price.noBlink;
+  } else {
+    D = _DATA.all;
+    P = _DATA.price.all;
+  }
+}
+pickDatasets();
 
 function cumulate(arr) {
   const r = []; let s = 0;
@@ -265,11 +285,9 @@ const heroMetrics = [
   { key: 'viewing', label: 'Visningspåmelding', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra påmeldinger' },
   { key: 'prospect', label: 'Salgsoppgave', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra nedlastinger' }
 ];
-const metrics = [...heroMetrics];
 
 let charts = {};
 let priceCharts = {};
-let curType = 'ALL', curBydel = 'ALL';
 
 function render() {
   const key = curType + '|' + curBydel;
@@ -289,7 +307,7 @@ function render() {
   const warn = document.getElementById('sampleWarning');
   if (Math.min(d.nStor, d.nMedium) < 50) {
     warn.style.display = 'block';
-    warn.textContent = 'Obs: Lavt utvalg (Stor n=' + d.nStor + ', Medium n=' + d.nMedium + '). Tallene kan v\u00e6re ustabile.';
+    warn.textContent = 'Obs: Lavt utvalg (Stor n=' + d.nStor + ', Medium n=' + d.nMedium + '). Tallene kan være ustabile.';
   } else {
     warn.style.display = 'none';
   }
@@ -304,7 +322,7 @@ function render() {
 
   const heroGrid = document.getElementById('heroGrid');
   heroGrid.innerHTML = '';
-  metrics.forEach(m => {
+  heroMetrics.forEach(m => {
     const s = cum.stor[m.key][7], med = cum.medium[m.key][7];
     const delta = s - med, pct = med !== 0 ? Math.round((s / med - 1) * 100) : 0;
     const card = document.createElement('div');
@@ -315,15 +333,15 @@ function render() {
 
   const barSection = document.getElementById('barSection');
   barSection.innerHTML = '';
-  const maxD = Math.max(...metrics.map(m => { const med = cum.medium[m.key][7]; return med !== 0 ? Math.abs(cum.stor[m.key][7] / med - 1) : 0; }));
-  metrics.forEach(m => {
+  const maxD = Math.max(...heroMetrics.map(m => { const med = cum.medium[m.key][7]; return med !== 0 ? Math.abs(cum.stor[m.key][7] / med - 1) : 0; }));
+  heroMetrics.forEach(m => {
     const s = cum.stor[m.key][7], med = cum.medium[m.key][7];
     const delta = s - med, pct = med !== 0 ? Math.round((s / med - 1) * 100) : 0;
     const ratio = med !== 0 ? Math.abs(s / med - 1) : 0;
     const bw = maxD > 0 ? Math.max((ratio / maxD) * 100, 8) : 50;
     const row = document.createElement('div');
     row.className = 'bar-row';
-    row.innerHTML = '<div class="bar-label">' + m.label + '<br><span class="bar-label-sub">' + m.fmt(med) + ' \u2192 ' + m.fmt(s) + '</span></div><div class="bar-track"><div class="bar-fill-delta" style="width:' + bw.toFixed(1) + '%">' + m.fmtAbs(delta) + '</div></div><div class="bar-delta ' + (pct<0?'negative':'') + '">' + (pct>=0?'+':'') + pct + '%</div>';
+    row.innerHTML = '<div class="bar-label">' + m.label + '<br><span class="bar-label-sub">' + m.fmt(med) + ' → ' + m.fmt(s) + '</span></div><div class="bar-track"><div class="bar-fill-delta" style="width:' + bw.toFixed(1) + '%">' + m.fmtAbs(delta) + '</div></div><div class="bar-delta ' + (pct<0?'negative':'') + '">' + (pct>=0?'+':'') + pct + '%</div>';
     barSection.appendChild(row);
   });
 
@@ -372,13 +390,12 @@ function makeGapChart(canvasId, storData, medData) {
   });
 }
 
-function fmtKr(v) { return Math.round(v).toLocaleString('nb-NO') + ' kr'; }
-
 function renderPrice() {
   const key = curType + '|' + curBydel;
   const pd = P[key];
   const priceGrid = document.getElementById('priceGrid');
   const priceTableEl = document.getElementById('priceTable');
+  const priceWarn = document.getElementById('priceSampleWarning');
 
   Object.values(priceCharts).forEach(c => c.destroy());
   priceCharts = {};
@@ -386,25 +403,37 @@ function renderPrice() {
   if (!pd || (!pd.Stor && !pd.Medium)) {
     priceGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#767677;font-size:13px;padding:20px">Ingen prisdata for denne kombinasjonen</div>';
     priceTableEl.innerHTML = '';
+    priceWarn.style.display = 'none';
     return;
   }
 
   const s = pd.Stor, m = pd.Medium;
+
+  if (s && m && Math.min(s.n, m.n) < 30) {
+    priceWarn.style.display = 'block';
+    priceWarn.textContent = 'Obs: Lavt utvalg prisdata (Stor n=' + s.n + ', Medium n=' + m.n + '). Tallene kan være ustabile.';
+  } else if (s && !m && s.n < 30 || m && !s && m.n < 30) {
+    priceWarn.style.display = 'block';
+    priceWarn.textContent = 'Obs: Lavt utvalg prisdata (n=' + (s ? s.n : m.n) + '). Tallene kan være ustabile.';
+  } else {
+    priceWarn.style.display = 'none';
+  }
+
   priceGrid.innerHTML = '';
 
   const cards = [
     { label: 'Prisoppnåelse', storVal: s ? s.avgPriceDiffPct : null, medVal: m ? m.avgPriceDiffPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', diffFmt: v => (v>=0?'+':'') + v.toFixed(2) + ' pp' },
     { label: 'Dager til salg', storVal: s ? s.avgDaysToSale : null, medVal: m ? m.avgDaysToSale : null, fmt: v => v.toFixed(1) + ' dager', diffFmt: v => (v>=0?'+':'') + v.toFixed(1) + ' dager', invert: true },
-    { label: 'Prisjustering', storVal: s ? s.avgPriceAdjPct : null, medVal: m ? m.avgPriceAdjPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', diffFmt: v => (v>=0?'+':'') + v.toFixed(2) + ' pp', invert: true },
+    { label: 'Prisjustering', storVal: s ? s.avgPriceAdjPct : null, medVal: m ? m.avgPriceAdjPct : null, fmt: v => v != null ? (v>=0?'+':'') + v.toFixed(2) + '%' : '–', diffFmt: v => v != null ? (v>=0?'+':'') + v.toFixed(2) + ' pp' : '–', invert: true },
   ];
 
   cards.forEach(c => {
     const card = document.createElement('div');
     card.className = 'price-card';
-    if (s && m) {
+    if (s && m && c.storVal != null && c.medVal != null) {
       const diff = c.storVal - c.medVal;
       const isPos = c.invert ? diff <= 0 : diff >= 0;
-      const fmtDiff = c.diffFmt ? c.diffFmt(diff) : c.fmt(diff);
+      const fmtDiff = c.diffFmt(diff);
       card.innerHTML = '<div class="hero-metric">' + c.label + '</div>' +
         '<div class="hero-pct ' + (isPos?'':'negative') + '">' + fmtDiff + '</div>' +
         '<div class="hero-abs" style="font-size:14px">Forskjell Stor vs Medium</div>' +
@@ -412,8 +441,9 @@ function renderPrice() {
     } else {
       const val = s || m;
       const pkg = s ? 'Stor' : 'Medium';
+      const v = c.storVal != null ? c.storVal : c.medVal;
       card.innerHTML = '<div class="hero-metric">' + c.label + '</div>' +
-        '<div class="hero-pct">' + c.fmt(c.storVal || c.medVal) + '</div>' +
+        '<div class="hero-pct">' + (v != null ? c.fmt(v) : '–') + '</div>' +
         '<div class="hero-abs" style="font-size:14px">' + pkg + ' pakke</div>';
     }
     priceGrid.appendChild(card);
@@ -423,48 +453,79 @@ function renderPrice() {
     priceTableEl.innerHTML = '<table class="price-table"><thead><tr>' +
       '<th></th><th>Stor pakke (n=' + s.n.toLocaleString('nb-NO') + ')</th><th>Medium pakke (n=' + m.n.toLocaleString('nb-NO') + ')</th><th>Forskjell</th>' +
       '</tr></thead><tbody>' +
-      makeRow('Prisoppnåelse (snitt)', s.avgPriceDiffPct, m.avgPriceDiffPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', false) +
-      makeRow('Dager til salg', s.avgDaysToSale, m.avgDaysToSale, v => v.toFixed(1) + ' dager', true) +
-      makeRow('Prisjustering', s.avgPriceAdjPct, m.avgPriceAdjPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', true) +
-      makeRow('Solgt over prisantydning', s.pctOver, m.pctOver, v => v.toFixed(1) + '%', false) +
-      makeRow('Solgt på prisantydning', s.pctAt, m.pctAt, v => v.toFixed(1) + '%', false) +
-      makeRow('Solgt under prisantydning', s.pctUnder, m.pctUnder, v => v.toFixed(1) + '%', true) +
-      makeRow('Kjøpt fornying', s.pctFornying, m.pctFornying, v => v.toFixed(1) + '%', false) +
-      makeRow('Kjøpt superfornying', s.pctSuperfornying, m.pctSuperfornying, v => v.toFixed(1) + '%', false) +
-      '</tbody></table>';
+      makeRow('Prisoppnåelse (snitt)', s.avgPriceDiffPct, m.avgPriceDiffPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', false, 'pp') +
+      makeRow('Prisoppnåelse (median)', s.medianPriceDiffPct, m.medianPriceDiffPct, v => (v>=0?'+':'') + v.toFixed(2) + '%', false, 'pp') +
+      makeRow('Dager til salg (snitt)', s.avgDaysToSale, m.avgDaysToSale, v => v.toFixed(1) + ' dager', true, 'dager') +
+      makeRow('Dager til salg (median)', s.medianDaysToSale, m.medianDaysToSale, v => v.toFixed(0) + ' dager', true, 'dager') +
+      makePriceAdjRow(s, m) +
+      makeRow('Solgt over prisantydning', s.pctOver, m.pctOver, v => v.toFixed(1) + '%', false, 'pp') +
+      makeRow('Solgt på prisantydning', s.pctAt, m.pctAt, v => v.toFixed(1) + '%', false, 'pp') +
+      makeRow('Solgt under prisantydning', s.pctUnder, m.pctUnder, v => v.toFixed(1) + '%', true, 'pp') +
+      makeRow('Kjøpt fornying', s.pctFornying, m.pctFornying, v => v.toFixed(1) + '%', false, 'pp') +
+      '</tbody></table>' +
+      '<div class="price-note">Prisoppnåelse = (solgtpris − første prisantydning) / første prisantydning. Prisjustering = endring i prisantydning fra første til siste (kun annonser med prisendring).</div>';
   } else {
     priceTableEl.innerHTML = '';
   }
 
-  if (s) renderDonut('donutStor', s, STOR_COLOR);
-  if (m) renderDonut('donutMedium', m, MEDIUM_COLOR);
+  if (s && m) {
+    renderDistChart(s, m);
+  }
 }
 
-function makeRow(label, sVal, mVal, fmt, invert) {
+function makeRow(label, sVal, mVal, fmt, invert, diffUnit) {
+  if (sVal == null || mVal == null) return '';
   const diff = sVal - mVal;
   const isPos = invert ? diff <= 0 : diff >= 0;
-  const diffStr = (diff >= 0 ? '+' : '') + (typeof sVal === 'number' && sVal > 1000 ? fmtKr(diff) : diff.toFixed(2));
+  const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' ' + diffUnit;
   return '<tr><td class="pkg-label">' + label + '</td>' +
     '<td class="pkg-stor">' + fmt(sVal) + '</td>' +
     '<td class="pkg-medium">' + fmt(mVal) + '</td>' +
     '<td class="' + (isPos?'val-positive':'val-negative') + '">' + diffStr + '</td></tr>';
 }
 
-function renderDonut(canvasId, data, mainColor) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  priceCharts[canvasId] = new Chart(ctx, {
-    type: 'doughnut',
+function makePriceAdjRow(s, m) {
+  if (s.avgPriceAdjPct == null && m.avgPriceAdjPct == null) return '';
+  const sFmt = s.avgPriceAdjPct != null ? (s.avgPriceAdjPct>=0?'+':'') + s.avgPriceAdjPct.toFixed(2) + '%' : '–';
+  const mFmt = m.avgPriceAdjPct != null ? (m.avgPriceAdjPct>=0?'+':'') + m.avgPriceAdjPct.toFixed(2) + '%' : '–';
+  const sNote = s.nWithAdj != null ? ' <span class="sub-val">(n=' + s.nWithAdj + ')</span>' : '';
+  const mNote = m.nWithAdj != null ? ' <span class="sub-val">(n=' + m.nWithAdj + ')</span>' : '';
+  let diffCell = '–';
+  if (s.avgPriceAdjPct != null && m.avgPriceAdjPct != null) {
+    const diff = s.avgPriceAdjPct - m.avgPriceAdjPct;
+    const isPos = diff <= 0;
+    diffCell = '<span class="' + (isPos?'val-positive':'val-negative') + '">' + (diff>=0?'+':'') + diff.toFixed(2) + ' pp</span>';
+  }
+  return '<tr><td class="pkg-label">Prisjustering</td>' +
+    '<td class="pkg-stor">' + sFmt + sNote + '</td>' +
+    '<td class="pkg-medium">' + mFmt + mNote + '</td>' +
+    '<td>' + diffCell + '</td></tr>';
+}
+
+function renderDistChart(s, m) {
+  const ctx = document.getElementById('distChart').getContext('2d');
+  priceCharts['distChart'] = new Chart(ctx, {
+    type: 'bar',
     data: {
       labels: ['Over prisantydning', 'På prisantydning', 'Under prisantydning'],
-      datasets: [{ data: [data.pctOver, data.pctAt, data.pctUnder], backgroundColor: ['#28CD94', '#06BEFB', '#0063FB'], borderWidth: 0, borderRadius: 4 }]
+      datasets: [
+        { label: 'Stor pakke', data: [s.pctOver, s.pctAt, s.pctUnder], backgroundColor: STOR_COLOR, borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.7 },
+        { label: 'Medium pakke', data: [m.pctOver, m.pctAt, m.pctUnder], backgroundColor: MEDIUM_COLOR, borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.7 }
+      ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { font: { family: FONT, size: 11 }, padding: 12, usePointStyle: true, pointStyle: 'circle' } },
-        tooltip: { backgroundColor: '#1b1b1f', cornerRadius: 8, padding: 12, bodyFont: { family: FONT },
-          callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed.toFixed(1) + '%'; } }
+        legend: { position: 'top', labels: { font: { family: FONT, size: 12 }, padding: 16, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1f', cornerRadius: 8, padding: 12, bodyFont: { family: FONT },
+          callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.x.toFixed(1) + '%'; } }
         }
+      },
+      scales: {
+        x: { grid: { color: '#f0f0f0' }, ticks: { font: { family: FONT, size: 11 }, color: '#767677', callback: v => v + '%' }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { font: { family: FONT, size: 12, weight: 600 }, color: '#474445' } }
       }
     }
   });
@@ -484,10 +545,19 @@ document.getElementById('byomradeSelect').addEventListener('change', e => {
   render();
 });
 
+document.getElementById('filterPeriod').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('#filterPeriod .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  curPeriod = btn.dataset.val;
+  pickDatasets();
+  render();
+});
+
 document.getElementById('blinkToggle').addEventListener('change', e => {
-  const mode = e.target.checked ? 'noBlink' : 'all';
-  D = _DATA[mode];
-  P = _DATA.price[mode];
+  curBlink = e.target.checked;
+  pickDatasets();
   render();
 });
 
