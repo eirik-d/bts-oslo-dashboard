@@ -50,7 +50,7 @@
 
   .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #767677; margin-bottom: 12px; margin-top: 32px; }
 
-  .hero-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 8px; }
+  .hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 8px; }
   .hero-card {
     background: white; border-radius: 16px; padding: 24px 20px; border: 1px solid #e8e8e8;
     text-align: center; position: relative; overflow: hidden;
@@ -102,7 +102,7 @@
     .filter-btn { padding: 6px 12px; font-size: 12px; }
     .filter-select { min-width: 0; width: 100%; }
 
-    .hero-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .hero-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .hero-pct { font-size: 28px; }
     .hero-abs { font-size: 14px; }
     .hero-metric { font-size: 10px; margin-bottom: 8px; }
@@ -203,9 +203,6 @@
   <div class="chart-card"><div class="chart-title">Visningsp&aring;melding</div><div class="chart-subtitle">Kumulativt snitt p&aring;meldinger per annonse</div><div class="chart-container"><canvas id="chartViewing"></canvas></div></div>
   <div class="chart-card"><div class="chart-title">Last ned salgsoppgave</div><div class="chart-subtitle">Kumulativt snitt nedlastinger per annonse</div><div class="chart-container"><canvas id="chartProspect"></canvas></div></div>
 </div>
-<div class="charts-grid-3">
-  <div class="chart-card"><div class="chart-title">Meldinger sendt</div><div class="chart-subtitle">Kumulativt snitt meldinger per annonse</div><div class="chart-container"><canvas id="chartMessages"></canvas></div></div>
-</div>
 
 <div class="footer">Kilde: Snowflake NMP_BI_PROD &middot; Bolig til salgs, Oslo, FINN &middot; Siste 12 m&aring;neder &middot; Alle plattformer (Web + iOS + Android)</div>
 
@@ -227,8 +224,7 @@ const metrics = [
   { key: 'views', label: 'Annonsevisninger', fmtAbs: v => (v>=0?'+':'') + Math.round(v).toLocaleString('nb-NO'), fmt: v => Math.round(v).toLocaleString('nb-NO'), unit: 'ekstra visninger' },
   { key: 'favorites', label: 'Favoritter', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra favoritter' },
   { key: 'viewing', label: 'Visningspåmelding', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra påmeldinger' },
-  { key: 'prospect', label: 'Salgsoppgave', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra nedlastinger' },
-  { key: 'messages', label: 'Meldinger', fmtAbs: v => (v>=0?'+':'') + v.toFixed(2), fmt: v => v.toFixed(2), unit: 'ekstra meldinger' }
+  { key: 'prospect', label: 'Salgsoppgave', fmtAbs: v => (v>=0?'+':'') + v.toFixed(1), fmt: v => v.toFixed(1), unit: 'ekstra nedlastinger' }
 ];
 
 let charts = {};
@@ -291,7 +287,7 @@ function render() {
 
   Object.values(charts).forEach(c => c.destroy());
   charts = {};
-  [['chartViews','views'],['chartFavorites','favorites'],['chartViewing','viewing'],['chartProspect','prospect'],['chartMessages','messages']].forEach(([id,key]) => {
+  [['chartViews','views'],['chartFavorites','favorites'],['chartViewing','viewing'],['chartProspect','prospect']].forEach(([id,key]) => {
     charts[id] = makeGapChart(id, cum.stor[key], cum.medium[key]);
   });
 }
