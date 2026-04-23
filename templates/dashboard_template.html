@@ -393,9 +393,9 @@ function renderPrice() {
   priceGrid.innerHTML = '';
 
   const cards = [
-    { label: 'Prisoppnåelse (snitt)', storVal: s ? s.avgPriceDiffPct : null, medVal: m ? m.avgPriceDiffPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', unit: 'over prisantydning' },
-    { label: 'Dager til salg (snitt)', storVal: s ? s.avgDaysToSale : null, medVal: m ? m.avgDaysToSale : null, fmt: v => v.toFixed(1), unit: 'dager', invert: true },
-    { label: 'Prisjustering (snitt)', storVal: s ? s.avgPriceAdjPct : null, medVal: m ? m.avgPriceAdjPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', unit: 'endring i prisantydning', invert: true },
+    { label: 'Prisoppnåelse', storVal: s ? s.avgPriceDiffPct : null, medVal: m ? m.avgPriceDiffPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', diffFmt: v => (v>=0?'+':'') + v.toFixed(2) + ' pp' },
+    { label: 'Dager til salg', storVal: s ? s.avgDaysToSale : null, medVal: m ? m.avgDaysToSale : null, fmt: v => v.toFixed(1) + ' dager', diffFmt: v => (v>=0?'+':'') + v.toFixed(1) + ' dager', invert: true },
+    { label: 'Prisjustering', storVal: s ? s.avgPriceAdjPct : null, medVal: m ? m.avgPriceAdjPct : null, fmt: v => (v>=0?'+':'') + v.toFixed(2) + '%', diffFmt: v => (v>=0?'+':'') + v.toFixed(2) + ' pp', invert: true },
   ];
 
   cards.forEach(c => {
@@ -404,15 +404,16 @@ function renderPrice() {
     if (s && m) {
       const diff = c.storVal - c.medVal;
       const isPos = c.invert ? diff <= 0 : diff >= 0;
+      const fmtDiff = c.diffFmt ? c.diffFmt(diff) : c.fmt(diff);
       card.innerHTML = '<div class="hero-metric">' + c.label + '</div>' +
-        '<div class="hero-pct ' + (isPos?'':'negative') + '">' + c.fmt(c.storVal) + '</div>' +
-        '<div class="hero-abs" style="font-size:14px">Stor pakke</div>' +
-        '<div class="hero-detail">Medium: ' + c.fmt(c.medVal) + '</div>';
+        '<div class="hero-pct ' + (isPos?'':'negative') + '">' + fmtDiff + '</div>' +
+        '<div class="hero-abs" style="font-size:14px">Forskjell Stor vs Medium</div>' +
+        '<div class="hero-detail">Stor: ' + c.fmt(c.storVal) + ' · Medium: ' + c.fmt(c.medVal) + '</div>';
     } else {
       const val = s || m;
       const pkg = s ? 'Stor' : 'Medium';
       card.innerHTML = '<div class="hero-metric">' + c.label + '</div>' +
-        '<div class="hero-pct">' + c.fmt(val.avgPriceDiffPct) + '</div>' +
+        '<div class="hero-pct">' + c.fmt(c.storVal || c.medVal) + '</div>' +
         '<div class="hero-abs" style="font-size:14px">' + pkg + ' pakke</div>';
     }
     priceGrid.appendChild(card);
